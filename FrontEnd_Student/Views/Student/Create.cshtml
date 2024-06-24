@@ -1,28 +1,50 @@
 ﻿@model FrontEnd_Student.Models.Student
 
+
 @{
     ViewData["Title"] = "Create Student";
 }
 
 <h1>Create Student</h1>
 
-<h4>Student</h4>
-<hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form id="create-form" asp-action="Create">
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <button type="submit" class="btn btn-primary">Create</button>
+                <button type="button" class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+<script>
+    $(document).ready(function () {
+        $('#create-form').submit(function (event) {
+            event.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '/Student/Create',
+                data: $(this).serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        $('#form-container').html(data);
+                    }
+                }
+            });
+        });
+    });
+
+    function cancelForm() {
+        $('#form-container').empty();
+        $('#form-container').hide();
+        $('#students-list').show();
+    }
+</script>

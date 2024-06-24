@@ -18,24 +18,13 @@ namespace FrontEnd_Student.Controllers
 
         public async Task<IActionResult> Index()
         {
-            List<Student> Students = new List<Student>();
-            Students = await _studentService.GetAllStudentsAsync();
-            return View(Students);
-        } 
-
-        public async Task<IActionResult> Details(Guid id)
-        {
-            var student = await _studentService.GetStudentByIdAsync(id);
-            if (student == null)
-            {
-                return NotFound();
-            }
-            return View(student);
+            var students = await _studentService.GetAllStudentsAsync();
+            return View(students);
         }
 
         public IActionResult Create()
         {
-            return View();
+            return PartialView();
         }
 
         [HttpPost]
@@ -44,9 +33,9 @@ namespace FrontEnd_Student.Controllers
             if (ModelState.IsValid)
             {
                 await _studentService.CreateStudentAsync(student);
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = true });
             }
-            return View(student);
+            return PartialView(student);
         }
 
         public async Task<IActionResult> Edit(Guid id)
@@ -56,7 +45,7 @@ namespace FrontEnd_Student.Controllers
             {
                 return NotFound();
             }
-            return View(student);
+            return PartialView(student);
         }
 
         [HttpPost]
@@ -70,9 +59,19 @@ namespace FrontEnd_Student.Controllers
             if (ModelState.IsValid)
             {
                 await _studentService.UpdateStudentAsync(id, student);
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = true });
             }
-            return View(student);
+            return PartialView(student);
+        }
+
+        public async Task<IActionResult> Details(Guid id)
+        {
+            var student = await _studentService.GetStudentByIdAsync(id);
+            if (student == null)
+            {
+                return NotFound();
+            }
+            return PartialView(student);
         }
 
         public async Task<IActionResult> Delete(Guid id)
@@ -82,15 +81,17 @@ namespace FrontEnd_Student.Controllers
             {
                 return NotFound();
             }
-            return View(student);
+            return PartialView(student);
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             await _studentService.DeleteStudentAsync(id);
-            return RedirectToAction(nameof(Index));
+            return Json(new { success = true });
         }
-    }
+    } 
+
 }
+
 

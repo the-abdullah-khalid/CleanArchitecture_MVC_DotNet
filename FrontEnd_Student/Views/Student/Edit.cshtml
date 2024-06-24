@@ -1,28 +1,49 @@
 ﻿@model FrontEnd_Student.Models.Student
-
 @{
     ViewData["Title"] = "Edit Student";
 }
 
 <h1>Edit Student</h1>
 
-<h4>Student</h4>
-<hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form id="edit-form" asp-action="Edit">
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+<script>
+    $(document).ready(function () {
+        $('#edit-form').submit(function (event) {
+            event.preventDefault();
+            var id = '@Model.Id';
+            $.ajax({
+                type: 'POST',
+                url: '/Student/Edit/' + id,
+                data: $(this).serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        $('#form-container').html(data);
+                    }
+                }
+            });
+        });
+    });
+
+    function cancelForm() {
+        $('#form-container').empty();
+        $('#form-container').hide();
+        $('#students-list').show();
+    }
+</script>
