@@ -3,14 +3,13 @@ using Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure
 {
     public class StudentRepository : IStudentRepository
     {
         private readonly StudentDbContext studentDbContext;
+
         public StudentRepository(StudentDbContext studentDbContext)
         {
             this.studentDbContext = studentDbContext;
@@ -26,7 +25,7 @@ namespace Infrastructure
         public Student? DeleteStudent(Guid id)
         {
             var student = studentDbContext.Students.FirstOrDefault(s => s.Id == id);
-            if(student==null)
+            if (student == null)
             {
                 return null;
             }
@@ -37,30 +36,31 @@ namespace Infrastructure
 
         public List<Student> GetAllStudents()
         {
-            var students=studentDbContext.Students.ToList();
-            return students;
+            return studentDbContext.Students.ToList();
         }
 
         public Student? GetStudent(Guid id)
         {
-            var student = studentDbContext.Students.FirstOrDefault(s => s.Id == id);
-            if(student==null)
-            {
-                return null;
-            }
-            return student;
+            return studentDbContext.Students.FirstOrDefault(s => s.Id == id);
         }
 
-        public Student? UpdateStudent(Guid id, Student student)
+        public Student? UpdateStudent(Guid id, Student updatedStudent)
         {
-            var _student = studentDbContext.Students.FirstOrDefault(s => s.Id == id);
-            if(_student==null)
+            var student = studentDbContext.Students.FirstOrDefault(s => s.Id == id);
+            if (student == null)
             {
                 return null;
             }
-            _student.Name=student.Name;
+
+            student.FirstName = updatedStudent.FirstName;
+            student.LastName = updatedStudent.LastName;
+            student.Gender = updatedStudent.Gender;
+            student.Email = updatedStudent.Email;
+            student.Phone = updatedStudent.Phone;
+            student.DateOfBirth = updatedStudent.DateOfBirth;
+
             studentDbContext.SaveChanges();
-            return _student;
+            return student;
         }
     }
 }

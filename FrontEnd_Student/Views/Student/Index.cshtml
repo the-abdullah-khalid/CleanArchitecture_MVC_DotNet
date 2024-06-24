@@ -2,79 +2,96 @@
 
 @{
     ViewData["Title"] = "Student List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Student List</h1>
+<div class="container">
 
-<p>
-    <button id="create-student" class="btn btn-primary">Create New</button>
-</p>
 
-<div id="students-list">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var student in Model)
-            {
-                <tr data-id="@student.Id" data-name="@student.Name">
-                    <td>@student.Name</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary edit-student">Edit</button>
-                        <button class="btn btn-sm btn-info view-details">Details</button>
-                        <button class="btn btn-sm btn-danger delete-student">Delete</button>
-                    </td>
+    <div id="students-list">
+        <h1>Student List</h1>
+
+        <p>
+            <button id="create-student" class="btn btn-primary">Create New</button>
+        </p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Gender</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Date of Birth</th>
+                    <th>Age</th>
+                    <th></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var student in Model)
+                {
+                    <tr data-id="@student.Id">
+                        <td>@student.FirstName</td>
+                        <td>@student.LastName</td>
+                        <td>@student.Gender</td>
+                        <td>@student.Email</td>
+                        <td>@student.Phone</td>
+                        <td>@student.DateOfBirth.ToShortDateString()</td>
+                        <td>@student.Age</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary edit-student">Edit</button>
+                            <button class="btn btn-sm btn-info view-details">Details</button>
+                            <button class="btn btn-sm btn-danger delete-student">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div id="form-container"></div>
+    <div id="modal-container"></div>
 </div>
 
-<div id="form-container"></div>
-<div id="modal-container"></div>
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // Handle Create
+            $('#create-student').click(function () {
+                $.get('/Student/Create', function (data) {
+                    $('#form-container').html(data);
+                    $('#form-container').show();
+                    $('#students-list').hide();
+                });
+            });
 
-<script>
-    $(document).ready(function () {
-        // Handle Create
-        $('#create-student').click(function () {
-            $.get('/Student/Create', function (data) {
-                $('#form-container').html(data);
-                $('#form-container').show();
-                $('#students-list').hide();
+            // Handle Edit
+            $('#students-list').on('click', '.edit-student', function () {
+                var id = $(this).closest('tr').data('id');
+                $.get('/Student/Edit/' + id, function (data) {
+                    $('#form-container').html(data);
+                    $('#form-container').show();
+                    $('#students-list').hide();
+                });
+            });
+
+            // Handle Delete
+            $('#students-list').on('click', '.delete-student', function () {
+                var id = $(this).closest('tr').data('id');
+                $.get('/Student/Delete/' + id, function (data) {
+                    $('#modal-container').html(data);
+                    $('#deleteModal').modal('show');
+                });
+            });
+
+            // Handle Details
+            $('#students-list').on('click', '.view-details', function () {
+                var id = $(this).closest('tr').data('id');
+                $.get('/Student/Details/' + id, function (data) {
+                    $('#modal-container').html(data);
+                    $('#detailsModal').modal('show');
+                });
             });
         });
-
-        // Handle Edit
-        $('.edit-student').click(function () {
-            var id = $(this).closest('tr').data('id');
-            $.get('/Student/Edit/' + id, function (data) {
-                $('#form-container').html(data);
-                $('#form-container').show();
-                $('#students-list').hide();
-            });
-        });
-
-        // Handle Delete
-        $('.delete-student').click(function () {
-            debugger
-            var id = $(this).closest('tr').data('id');
-            $.get('/Student/Delete/' + id, function (data) {
-                $('#modal-container').html(data);
-                $('#deleteModal').modal('show');
-            });
-        });
-
-        // Handle Details
-        $('.view-details').click(function () {
-            var id = $(this).closest('tr').data('id');
-            $.get('/Student/Details/' + id, function (data) {
-                $('#modal-container').html(data);
-                $('#detailsModal').modal('show');
-            });
-        });
-    });
-</script>
+    </script>
+}
