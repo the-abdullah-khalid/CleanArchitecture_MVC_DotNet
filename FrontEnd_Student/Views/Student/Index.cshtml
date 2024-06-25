@@ -5,15 +5,27 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@functions {
+    public string FormatDate(DateTime date)
+    {
+        var day = date.Day;
+        var suffix = "th";
+        if (day % 10 == 1 && day != 11) suffix = "st";
+        else if (day % 10 == 2 && day != 12) suffix = "nd";
+        else if (day % 10 == 3 && day != 13) suffix = "rd";
+
+        return $"{day}<sup>{suffix}</sup>-{date:MMM-yyyy}";
+    }
+}
+
 <div class="container">
-
-
     <div id="students-list">
         <h1>Student List</h1>
 
         <p>
-            <button id="create-student" class="btn btn-primary">Create New</button>
+            <button id="create-student" class="btn btn-primary">Insert New Student</button>
         </p>
+
         <table class="table">
             <thead>
                 <tr>
@@ -24,24 +36,30 @@
                     <th>Phone</th>
                     <th>Date of Birth</th>
                     <th>Age</th>
-                    <th></th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var student in Model)
                 {
                     <tr data-id="@student.Id">
-                        <td>@student.FirstName</td>
+                        <td><a href="#" class="view-details" data-id="@student.Id" style="text-decoration: underline;">@student.FirstName</a></td>
                         <td>@student.LastName</td>
                         <td>@student.Gender</td>
                         <td>@student.Email</td>
                         <td>@student.Phone</td>
-                        <td>@student.DateOfBirth.ToShortDateString()</td>
+                        <td>@Html.Raw(FormatDate(student.DateOfBirth))</td>
                         <td>@student.Age</td>
                         <td>
-                            <button class="btn btn-sm btn-primary edit-student">Edit</button>
-                            <button class="btn btn-sm btn-info view-details">Details</button>
-                            <button class="btn btn-sm btn-danger delete-student">Delete</button>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="actionMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="actionMenu">
+                                    <a class="dropdown-item edit-student" href="#" data-id="@student.Id">Edit</a>
+                                    <a class="dropdown-item delete-student" href="#" data-id="@student.Id">Delete</a>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -58,26 +76,27 @@
         $(document).ready(function () {
             // Handle Create
             $('#create-student').click(function () {
+                history.pushState({ page: 'create' }, 'Create Student', '/insertStudent'); 
                 $.get('/Student/Create', function (data) {
-                    $('#form-container').html(data);
-                    $('#form-container').show();
-                    $('#students-list').hide();
+                    $('#form-container').html(data).removeClass('d-none');
+                    $('#students-list').addClass('d-none');
                 });
             });
 
             // Handle Edit
             $('#students-list').on('click', '.edit-student', function () {
                 var id = $(this).closest('tr').data('id');
+                history.pushState({ page: 'edit', id: id }, 'Edit Student', '/editStudent/' + id);
                 $.get('/Student/Edit/' + id, function (data) {
-                    $('#form-container').html(data);
-                    $('#form-container').show();
-                    $('#students-list').hide();
+                    $('#form-container').html(data).removeClass('d-none');
+                    $('#students-list').addClass('d-none');
                 });
             });
 
             // Handle Delete
             $('#students-list').on('click', '.delete-student', function () {
                 var id = $(this).closest('tr').data('id');
+                history.pushState({ page: 'delete', id: id }, 'Delete Student', '/deleteStudent/' + id);
                 $.get('/Student/Delete/' + id, function (data) {
                     $('#modal-container').html(data);
                     $('#deleteModal').modal('show');
@@ -87,10 +106,60 @@
             // Handle Details
             $('#students-list').on('click', '.view-details', function () {
                 var id = $(this).closest('tr').data('id');
+                history.pushState({ page: 'details', id: id }, 'Student Details', '/viewStudentDetails/' + id);
                 $.get('/Student/Details/' + id, function (data) {
                     $('#modal-container').html(data);
                     $('#detailsModal').modal('show');
                 });
+            });
+
+            // Handle back/forward button navigation
+            window.onpopstate = function (event) {
+                if (event.state) {
+                    switch (event.state.page) {
+                        case 'create':
+                            $('#create-student').click();
+                            break;
+                        case 'edit':
+                            $('.edit-student').filter(`[data-id='${event.state.id}']`).click();
+                            break;
+                        case 'details':
+                            $('.view-details').filter(`[data-id='${event.state.id}']`).click();
+                            break;
+                        default:
+                            $('#form-container').empty().addClass('d-none');
+                            $('#students-list').removeClass('d-none');
+                            break;
+                    }
+                } else {
+                    $('#form-container').empty().addClass('d-none');
+                    $('#students-list').removeClass('d-none');
+                }
+            };
+
+            // Handle Save and Close actions
+            $('#form-container').on('submit', 'form', function (event) {
+                event.preventDefault();
+                var $form = $(this);
+                $.ajax({
+                    type: $form.attr('method'),
+                    url: $form.attr('action'),
+                    data: $form.serialize(),
+                    success: function (data) {
+                        if (data.success) {
+                            history.pushState(null, '', '/');
+                            location.reload();
+                        } else {
+                            $('#form-container').html(data);
+                        }
+                    }
+                });
+            });
+
+            $('#form-container').on('click', '.btn-secondary', function () {
+                history.pushState(null, '', '/');
+                $('#form-container').empty().addClass('d-none');
+                $('#students-list').removeClass('d-none');
             });
         });
     </script>
